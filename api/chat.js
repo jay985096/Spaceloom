@@ -18,13 +18,24 @@ export default async function handler(req) {
   if (req.method === "OPTIONS") return new Response(null, { headers });
   if (req.method !== "POST") return Response.json({ error: "Only POST allowed" }, { status: 400, headers });
 
-  const { userPrompt } = await req.json();
+  let userPrompt;
+  try {
+    const body = await req.json();
+    userPrompt = body.userPrompt;
+  } catch (e) {
+    return Response.json({ error: "Request body parse failed" }, { status: 400, headers });
+  }
+
   const accessKeyId = process.env.VOLC_ACCESS_KEY_ID;
   const secretKey = process.env.VOLC_SECRET_KEY;
   const epId = process.env.ARK_ENDPOINT_ID;
 
+  // 前置校验密钥是否存在
+  if (!accessKeyId || !secretKey || !epId) {
+    return Response.json({ error: "Missing AK/SK/EP_ID env variable" }, { status: 500, headers });
+  }
+
   const arkUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
-  // 重点：AK和SK中间无冒号，直接拼接
   const auth = `Bearer ${accessKeyId}${secretKey}`;
 
   try {
@@ -52,9 +63,12 @@ export default async function handler(req) {
     });
 
     const data = await res.json();
+    // 打印火山返回完整响应，方便定位鉴权报错
+    console.log("火山接口返回数据：", JSON.stringify(data, null, 2));
     return Response.json(data, { headers });
   } catch (err) {
-    console.error("接口调用异常：", err);
-    return Response.json({ error: "Server internal error" }, { status: 500, headers });
+    // 完整打印错误文本，不再只输出 [object Object]
+    console.error("完整异常信息：", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    return Response.json({ error: "Server internal error", detail: String(err) }, { status: 500, headers });
   }
 }
