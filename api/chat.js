@@ -3,34 +3,34 @@ export const config = {
 };
 
 export default async function handler(req) {
+  // 处理预检OPTIONS
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200 });
   }
 
   if (req.method !== "POST") {
-    return Response.json({ error: "Only POST allowed" }, { status: 405 });
+    return Response.json({ error: "Only POST requests allowed" }, { status: 405 });
   }
 
   const arkApiKey = process.env.ARK_API_KEY;
-  console.log("ARK_API_KEY 是否读取成功：", Boolean(arkApiKey));
-
+  console.log("【火山完整返回密钥检测】", Boolean(arkApiKey));
   if (!arkApiKey) {
-    return Response.json({ error: "Missing ARK_API_KEY" }, { status: 500 });
+    return Response.json({ error: "Missing ARK_API_KEY env" }, { status: 500 });
   }
 
   let userPrompt;
   try {
     const body = await req.json();
     userPrompt = body.userPrompt;
-  } catch (err) {
-    return Response.json({ error: "Parse input failed" }, { status: 400 });
+  } catch (e) {
+    return Response.json({ error: "Parse request body failed" }, { status: 400 });
   }
 
   const endpointId = "ep-20260722205932-hwkh5";
-  const arkApiUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+  const arkUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
   try {
-    const res = await fetch(arkApiUrl, {
+    const res = await fetch(arkUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${arkApiKey}`,
@@ -42,7 +42,7 @@ export default async function handler(req) {
         messages: [
           {
             role: "system",
-            content: "You are a professional North American indoor furniture matching designer. All replies must be English. Provide personalized furniture plans based on customer budget, house type, room size, style and functional needs, and guide users to buy furniture on Wayfair."
+            content: "You are a professional North American indoor furniture matching designer. All output must be English. Recommend furniture matching plans according to customer budget, house type, room size, style preference and functional demands, and finally guide customers to buy matching furniture on Wayfair."
           },
           { role: "user", content: userPrompt }
         ],
@@ -51,10 +51,11 @@ export default async function handler(req) {
     });
 
     const data = await res.json();
-    console.log("火山完整返回：", JSON.stringify(data));
+    console.log("【火山完整返回】", JSON.stringify(data));
     return Response.json(data);
   } catch (err) {
-    console.error("接口异常：", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-    return Response.json({ error: "Server error" }, { status: 500 });
+    const errInfo = JSON.stringify(err, Object.getOwnPropertyNames(err));
+    console.error("接口异常：", errInfo);
+    return Response.json({ error: "Server error", detail: errInfo }, { status: 500 });
   }
 }
