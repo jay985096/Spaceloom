@@ -1,7 +1,4 @@
 {
   "name": "doubao-proxy",
-  "version": "1.0.0",
-  "dependencies": {
-    "@volcengine/ark-runtime": "^0.1.10"
-  }
+  "version": "1.0.0"
 }
