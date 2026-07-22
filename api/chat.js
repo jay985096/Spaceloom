@@ -1,4 +1,7 @@
-export const config = {
+console.log("====环境变量检测====")
+console.log("AK是否读取成功:", !!process.env.VOLC_ACCESS_KEY_ID)
+console.log("SK是否读取成功:", !!process.env.VOLC_SECRET_KEY)
+console.log("EP_ID是否读取成功:", !!process.env.ARK_ENDPOINT_ID)export const config = {
   runtime: "edge"
 };
 
