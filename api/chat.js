@@ -3,7 +3,6 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // 处理预检OPTIONS
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200 });
   }
@@ -13,7 +12,7 @@ export default async function handler(req) {
   }
 
   const arkApiKey = process.env.ARK_API_KEY;
-  console.log("【火山完整返回密钥检测】", Boolean(arkApiKey));
+  console.log("【密钥检测】", Boolean(arkApiKey));
   if (!arkApiKey) {
     return Response.json({ error: "Missing ARK_API_KEY env" }, { status: 500 });
   }
