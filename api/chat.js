@@ -1,20 +1,32 @@
-console.log("=====环境变量检测=====");
-console.log("ARK_API_KEY是否读取成功：", !!process.env.ARK_API_KEY);
-
 export const config = {
   runtime: "edge"
 };
 
 export default async function handler(req) {
-  const shopifyDomain = "https://spaceloom.myshopify.com";
+  // 你的Shopify店铺源域名，一字不能错
+  const ALLOW_ORIGIN = "https://spaceloom.myshopify.com";
   const headers = {
-    "Access-Control-Allow-Origin": shopifyDomain,
+    "Access-Control-Allow-Origin": ALLOW_ORIGIN,
     "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type",
   };
 
-  if (req.method === "OPTIONS") return new Response(null, { headers });
-  if (req.method !== "POST") return Response.json({ error: "Only POST allowed" }, { status: 400, headers });
+  // 处理浏览器OPTIONS预检请求（关键，之前漏完整处理会跨域报错）
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers });
+  }
+
+  if (req.method !== "POST") {
+    return Response.json({ error: "Only POST requests allowed" }, { status: 405, headers });
+  }
+
+  const arkApiKey = process.env.ARK_API_KEY;
+  console.log("=====环境变量检测=====");
+  console.log("ARK_API_KEY 是否存在：", Boolean(arkApiKey));
+
+  if (!arkApiKey) {
+    return Response.json({ error: "Missing ARK_API_KEY env variable" }, { status: 500, headers });
+  }
 
   let userPrompt;
   try {
@@ -24,47 +36,36 @@ export default async function handler(req) {
     return Response.json({ error: "Request body parse failed" }, { status: 400, headers });
   }
 
-  const apiKey = process.env.ARK_API_KEY;
   const epId = "ep-20260722205932-hwkh5";
-
-  if (!apiKey) {
-    return Response.json({ error: "Missing ARK_API_KEY env variable" }, { status: 500, headers });
-  }
-
   const arkUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
-  const auth = `Bearer ${apiKey}`;
 
   try {
     const res = await fetch(arkUrl, {
       method: "POST",
       headers: {
-        "Authorization": auth,
+        "Authorization": `Bearer ${arkApiKey}`,
         "Content-Type": "application/json",
-        "X-Volc-Ark-Endpoint-Id": epId
+        "X-Volc-ARK-Endpoint-Id": epId
       },
       body: JSON.stringify({
         model: epId,
         messages: [
           {
             role: "system",
-            content: "You are a professional North American indoor furniture matching designer. All output must be in English. Recommend furniture that matches the customer's budget, house type and style, and finally guide customers to buy on Wayfair."
+            content: "You are a professional North American indoor furniture matching designer. All output must be English. Recommend furniture matching plans according to customer budget, house type, room size, style preference and functional demands, and finally guide customers to buy matching furniture on Wayfair."
           },
-          {
-            role: "user",
-            content: userPrompt
-          }
+          { role: "user", content: userPrompt }
         ],
         temperature: 0.7
       })
     });
 
     const data = await res.json();
-    console.log("【火山完整返回】", JSON.stringify(data, null, 2));
+    console.log("火山返回完整数据：", JSON.stringify(data));
     return Response.json(data, { headers });
   } catch (err) {
-    // 重点：序列化完整错误，不再显示 [object Object]
-    const fullErr = JSON.stringify(err, Object.getOwnPropertyNames(err));
-    console.error("【请求异常完整信息】", fullErr);
-    return Response.json({ error: "Server internal error", detail: fullErr }, { status: 500, headers });
+    const errInfo = JSON.stringify(err, Object.getOwnPropertyNames(err));
+    console.error("请求异常完整信息：", errInfo);
+    return Response.json({ error: "Server error", detail: errInfo }, { status: 500, headers });
   }
 }
