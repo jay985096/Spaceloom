@@ -3,33 +3,40 @@ export const config = {
 };
 
 export default async function handler(req) {
+  // 固定跨域头部，所有响应全部携带，不会丢失
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "https://spaceloom.myshopify.com",
+    "Access-Control-Allow-Methods": "POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  };
+
+  // 单独处理浏览器OPTIONS预检请求（解决核心拦截根源）
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200 });
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return Response.json({ error: "Only POST requests allowed" }, { status: 405 });
+    return Response.json({ error: "Only POST requests allowed" }, { status: 405, headers: corsHeaders });
   }
 
   const arkApiKey = process.env.ARK_API_KEY;
-  console.log("【密钥检测】", Boolean(arkApiKey));
   if (!arkApiKey) {
-    return Response.json({ error: "Missing ARK_API_KEY env" }, { status: 500 });
+    return Response.json({ error: "Missing ARK_API_KEY environment variable" }, { status: 500, headers: corsHeaders });
   }
 
   let userPrompt;
   try {
     const body = await req.json();
     userPrompt = body.userPrompt;
-  } catch (e) {
-    return Response.json({ error: "Parse request body failed" }, { status: 400 });
+  } catch (parseErr) {
+    return Response.json({ error: "Failed to parse input content" }, { status: 400, headers: corsHeaders });
   }
 
   const endpointId = "ep-20260722205932-hwkh5";
-  const arkUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+  const arkApiUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
   try {
-    const res = await fetch(arkUrl, {
+    const arkResponse = await fetch(arkApiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${arkApiKey}`,
@@ -49,12 +56,9 @@ export default async function handler(req) {
       })
     });
 
-    const data = await res.json();
-    console.log("【火山完整返回】", JSON.stringify(data));
-    return Response.json(data);
-  } catch (err) {
-    const errInfo = JSON.stringify(err, Object.getOwnPropertyNames(err));
-    console.error("接口异常：", errInfo);
-    return Response.json({ error: "Server error", detail: errInfo }, { status: 500 });
+    const resultData = await arkResponse.json();
+    return Response.json(resultData, { headers: corsHeaders });
+  } catch (serverErr) {
+    return Response.json({ error: "Server request failed" }, { status: 500, headers: corsHeaders });
   }
 }
