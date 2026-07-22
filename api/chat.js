@@ -1,7 +1,5 @@
 console.log("=====环境变量检测=====");
-console.log("AK是否读取成功：", !!process.env.VOLC_ACCESS_KEY_ID);
-console.log("SK是否读取成功：", !!process.env.VOLC_SECRET_KEY);
-console.log("EP_ID是否读取成功：", !!process.env.ARK_ENDPOINT_ID);
+console.log("ARK_API_KEY是否读取成功：", !!process.env.ARK_API_KEY);
 
 export const config = {
   runtime: "edge"
@@ -26,17 +24,15 @@ export default async function handler(req) {
     return Response.json({ error: "Request body parse failed" }, { status: 400, headers });
   }
 
-  const accessKeyId = process.env.VOLC_ACCESS_KEY_ID;
-  const secretKey = process.env.VOLC_SECRET_KEY;
-  const epId = process.env.ARK_ENDPOINT_ID;
+  const apiKey = process.env.ARK_API_KEY;
+  const epId = "ep-20260722205932-hwkh5";
 
-  // 前置校验密钥是否存在
-  if (!accessKeyId || !secretKey || !epId) {
-    return Response.json({ error: "Missing AK/SK/EP_ID env variable" }, { status: 500, headers });
+  if (!apiKey) {
+    return Response.json({ error: "Missing ARK_API_KEY env variable" }, { status: 500, headers });
   }
 
   const arkUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
-  const auth = `Bearer ${accessKeyId}${secretKey}`;
+  const auth = `Bearer ${apiKey}`;
 
   try {
     const res = await fetch(arkUrl, {
@@ -63,12 +59,12 @@ export default async function handler(req) {
     });
 
     const data = await res.json();
-    // 打印火山返回完整响应，方便定位鉴权报错
-    console.log("火山接口返回数据：", JSON.stringify(data, null, 2));
+    console.log("【火山完整返回】", JSON.stringify(data, null, 2));
     return Response.json(data, { headers });
   } catch (err) {
-    // 完整打印错误文本，不再只输出 [object Object]
-    console.error("完整异常信息：", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-    return Response.json({ error: "Server internal error", detail: String(err) }, { status: 500, headers });
+    // 重点：序列化完整错误，不再显示 [object Object]
+    const fullErr = JSON.stringify(err, Object.getOwnPropertyNames(err));
+    console.error("【请求异常完整信息】", fullErr);
+    return Response.json({ error: "Server internal error", detail: fullErr }, { status: 500, headers });
   }
 }
