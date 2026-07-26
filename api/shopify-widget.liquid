@@ -1,0 +1,85 @@
+<!--
+  使用方法：
+  1. 进入 Shopify 后台 → 在线商店 → 主题 → 自定义
+  2. 在你想放置"商品推荐/问答"的那个页面/区块，添加一个 "自定义 Liquid" (Custom Liquid) 区块
+  3. 把下面全部代码粘贴进去
+  4. 把 API_ENDPOINT 改成你 Vercel 部署后的真实地址，例如：
+     https://your-project.vercel.app/api/assistant
+-->
+
+<div id="ark-assistant-widget" style="max-width:480px;margin:0 auto;font-family:inherit;">
+  <div id="ark-chat-log" style="height:320px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:8px;background:#fafafa;"></div>
+  <div style="display:flex;gap:8px;">
+    <input id="ark-chat-input" type="text" placeholder="问问我，比如“有没有适合夏天的连衣裙？”"
+      style="flex:1;padding:10px 12px;border:1px solid #ccc;border-radius:6px;" />
+    <button id="ark-chat-send" style="padding:10px 16px;border:none;border-radius:6px;background:#111;color:#fff;cursor:pointer;">发送</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const API_ENDPOINT = "https://YOUR-PROJECT.vercel.app/api/assistant"; // TODO: 改成你的 Vercel 域名
+
+  const log = document.getElementById("ark-chat-log");
+  const input = document.getElementById("ark-chat-input");
+  const sendBtn = document.getElementById("ark-chat-send");
+  let history = [];
+
+  function appendMessage(role, text) {
+    const bubble = document.createElement("div");
+    bubble.style.margin = "6px 0";
+    bubble.style.textAlign = role === "user" ? "right" : "left";
+    bubble.innerHTML = `<span style="display:inline-block;padding:8px 12px;border-radius:14px;
+      background:${role === "user" ? "#111" : "#eee"};color:${role === "user" ? "#fff" : "#111"};max-width:80%;">
+      ${text}</span>`;
+    log.appendChild(bubble);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function appendProducts(products) {
+    if (!products || !products.length) return;
+    const wrap = document.createElement("div");
+    wrap.style.margin = "6px 0";
+    wrap.innerHTML = products
+      .map(
+        (handle) =>
+          `<a href="/products/${handle}" style="display:inline-block;margin:4px 6px 0 0;padding:4px 10px;
+            border:1px solid #ccc;border-radius:12px;font-size:12px;text-decoration:none;color:#111;">
+            查看：${handle}</a>`
+      )
+      .join("");
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text) return;
+    appendMessage("user", text);
+    input.value = "";
+    sendBtn.disabled = true;
+
+    try {
+      const resp = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history }),
+      });
+      const data = await resp.json();
+      appendMessage("assistant", data.reply || "抱歉，我没有理解，可以换个方式问吗？");
+      appendProducts(data.recommended_products);
+      history.push({ role: "user", content: text });
+      history.push({ role: "assistant", content: data.reply || "" });
+    } catch (err) {
+      appendMessage("assistant", "网络出错了，请稍后再试～");
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener("click", send);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") send();
+  });
+})();
+</script>
