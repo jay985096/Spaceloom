@@ -80,10 +80,10 @@ async function fetchShopifyProducts() {
     `https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-      },
+headers: {
+  "Content-Type": "application/json",
+  "Shopify-Storefront-Private-Token": SHOPIFY_STOREFRONT_TOKEN,
+},
       body: JSON.stringify({ query }),
     }
   );
