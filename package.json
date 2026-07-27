@@ -1,6 +1,8 @@
 {
-  "name": "space-furniture-ai-api",
+  "name": "spaceloom-assistant",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {}
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  }
 }
