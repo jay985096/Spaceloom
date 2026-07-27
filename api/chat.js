@@ -5,14 +5,23 @@ const ARK_API_KEY = process.env.ARK_API_KEY;
 const ARK_MODEL_ID = process.env.ARK_MODEL_ID;
 const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
+
+// 支持多个域名，用逗号分隔，例如：
+// https://spaceloom.myshopify.com,https://5vsg10-xr.myshopify.com
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const ARK_ENDPOINT = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 const SHOPIFY_API_VERSION = "2024-10";
 
 export default async function handler(req, res) {
   // ---------- CORS ----------
-  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  const requestOrigin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(requestOrigin)) {
+    res.setHeader("Access-Control-Allow-Origin", requestOrigin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -80,10 +89,10 @@ async function fetchShopifyProducts() {
     `https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`,
     {
       method: "POST",
-headers: {
-  "Content-Type": "application/json",
-  "Shopify-Storefront-Private-Token": SHOPIFY_STOREFRONT_TOKEN,
-},
+      headers: {
+        "Content-Type": "application/json",
+        "Shopify-Storefront-Private-Token": SHOPIFY_STOREFRONT_TOKEN,
+      },
       body: JSON.stringify({ query }),
     }
   );
