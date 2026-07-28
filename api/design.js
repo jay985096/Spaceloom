@@ -3,7 +3,15 @@
 // 商品数据来源目前是 data/wayfair-catalog-sample.json（占位样例）
 // 等 Wayfair/CJ Affiliate 数据接口就绪后，把 loadCatalog() 换成真实数据源即可，其余逻辑不用改
 
-import catalogData from "../data/wayfair-catalog-sample.json" with { type: "json" };
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const catalogData = JSON.parse(
+  readFileSync(join(__dirname, "..", "data", "wayfair-catalog-sample.json"), "utf-8")
+);
 
 const ARK_API_KEY = process.env.ARK_API_KEY;
 const ARK_MODEL_ID = process.env.ARK_MODEL_ID;
