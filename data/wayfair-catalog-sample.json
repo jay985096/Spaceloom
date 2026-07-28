@@ -1,0 +1,55 @@
+{
+  "note": "这是占位样例数据，用于打通技术流程。等 Wayfair/CJ Affiliate 审核通过、拿到真实商品数据接口后，需要把这个文件替换成真实同步的商品数据。",
+  "products": [
+    {
+      "id": "sample-001",
+      "title": "Oak Frame Sofa in Warm Linen",
+      "category": "sofa",
+      "tags": ["living room", "minimalist", "oak", "linen", "warm"],
+      "price": 899.00,
+      "currency": "USD",
+      "image": "https://via.placeholder.com/600x400.png?text=Oak+Frame+Sofa",
+      "affiliate_url": "https://www.wayfair.com/PLACEHOLDER-sofa"
+    },
+    {
+      "id": "sample-002",
+      "title": "Rattan Accent Chair",
+      "category": "chair",
+      "tags": ["balcony", "outdoor", "rattan", "natural"],
+      "price": 249.00,
+      "currency": "USD",
+      "image": "https://via.placeholder.com/600x400.png?text=Rattan+Accent+Chair",
+      "affiliate_url": "https://www.wayfair.com/PLACEHOLDER-chair"
+    },
+    {
+      "id": "sample-003",
+      "title": "Walnut Coffee Table",
+      "category": "table",
+      "tags": ["living room", "walnut", "mid-century"],
+      "price": 329.00,
+      "currency": "USD",
+      "image": "https://via.placeholder.com/600x400.png?text=Walnut+Coffee+Table",
+      "affiliate_url": "https://www.wayfair.com/PLACEHOLDER-table"
+    },
+    {
+      "id": "sample-004",
+      "title": "Linen Bedding Set, Bedroom",
+      "category": "bedding",
+      "tags": ["bedroom", "linen", "minimalist", "neutral"],
+      "price": 159.00,
+      "currency": "USD",
+      "image": "https://via.placeholder.com/600x400.png?text=Linen+Bedding+Set",
+      "affiliate_url": "https://www.wayfair.com/PLACEHOLDER-bedding"
+    },
+    {
+      "id": "sample-005",
+      "title": "Warm-Tone Floor Lamp",
+      "category": "lighting",
+      "tags": ["reading corner", "living room", "warm light"],
+      "price": 89.00,
+      "currency": "USD",
+      "image": "https://via.placeholder.com/600x400.png?text=Floor+Lamp",
+      "affiliate_url": "https://www.wayfair.com/PLACEHOLDER-lamp"
+    }
+  ]
+}
